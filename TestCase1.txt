@@ -1,0 +1,52 @@
+using System;
+using System.Linq;
+using System.Threading.Tasks;
+using Moq;
+using NUnit.Framework;
+using Xamarin.Essentials;
+
+namespace GpsGeolocator0._1.Tests
+{
+    [TestFixture]
+    public class MainPageTests
+    {
+        [Test]
+        public async Task GetLocation_WithLastKnownLocation_ReturnsExpectedResult()
+        {
+            // Arrange
+            var geolocationServiceMock = new Mock<IGeolocationService>();
+            var page = new MainPage(geolocationServiceMock.Object);
+
+            var location = new Location(10.0, 20.0);
+            geolocationServiceMock.Setup(s => s.GetLastKnownLocationAsync()).ReturnsAsync(location);
+
+            // Action
+            page.GetLocation();
+
+            // Assert
+            await Task.Delay(100); // Allow asynchronous code to complete
+            Assert.AreEqual($"Latitude : {location.Latitude}\nLongitude : {location.Longitude}\n", page.txtLoc.Text);
+        }
+
+        [Test]
+        public async Task GetLocation_WithoutLastKnownLocation_ReturnsExpectedResult()
+        {
+            // Arrange
+            var geolocationServiceMock = new Mock<IGeolocationService>();
+            var page = new MainPage(geolocationServiceMock.Object);
+
+            // Simulate no last known location
+            geolocationServiceMock.Setup(s => s.GetLastKnownLocationAsync()).ReturnsAsync((Location)null);
+
+            var location = new Location(30.0, 40.0);
+            geolocationServiceMock.Setup(s => s.GetLocationAsync(It.IsAny<GeolocationRequest>())).ReturnsAsync(location);
+
+            // Action
+            page.GetLocation();
+
+            // Assert
+            await Task.Delay(100); // Allow asynchronous code to complete
+            Assert.AreEqual($"Latitude : {location.Latitude}\nLongitude : {location.Longitude}\n", page.txtLoc.Text);
+        }
+    }
+}
